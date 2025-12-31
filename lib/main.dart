@@ -9,7 +9,10 @@ import 'package:fl_chart/fl_chart.dart';
 // GLOBALNY SYSTEM WALUT
 // =============================================================================
 class GlobalFinance {
+  static int totalCoins = 0; // Tu zapisujemy wszystkie monety
+  static List<int> ownedSkinIndices = [0]; // Indeksy kupionych skinów (0 to Bitcoin - darmowy)
   static ValueNotifier<String> selectedCurrency = ValueNotifier<String>("USD");
+  static List allCoins = [];
   static Map<String, double> rates = {
     "USD": 1.0, 
     "PLN": 4.02, 
@@ -94,11 +97,11 @@ class _MainNavigationState extends State<MainNavigation> {
           indicatorColor: Colors.amber.withOpacity(0.1),
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: 'Giełda'),
-            NavigationDestination(icon: Icon(Icons.diamond_outlined), label: 'Metale'),
-            NavigationDestination(icon: Icon(Icons.currency_exchange_rounded), label: 'Kantor'),
-            NavigationDestination(icon: Icon(Icons.account_balance_wallet_rounded), label: 'Portfel'),
-            NavigationDestination(icon: Icon(Icons.sports_esports_rounded), label: 'Relaks'),
+            NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: 'GIEŁDA'),
+            NavigationDestination(icon: Icon(Icons.diamond_outlined), label: 'METALE'),
+            NavigationDestination(icon: Icon(Icons.currency_exchange_rounded), label: 'KANTOR'),
+            NavigationDestination(icon: Icon(Icons.account_balance_wallet_rounded), label: 'PORTFEL'),
+            NavigationDestination(icon: Icon(Icons.sports_esports_rounded), label: 'RELAKS'),
           ],
         ),
       ),
@@ -186,7 +189,7 @@ Future<void> showGameInfo(BuildContext context, String title, String desc, VoidC
               child: const Row(children: [
                 Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 30),
                 SizedBox(width: 10),
-                Expanded(child: Text("UWAGA: Gra zawiera szybko migające kolory. Może wywołać napad epilepsji.", style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)))
+                Expanded(child: Text("UWAGA: GRA ZAWIERA SZYBKO MIGAJĄCE KOLORY. MOŻE WYWOŁAĆ NAPAD EPILEPSJI.", style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)))
               ])
             )
           ],
@@ -289,6 +292,7 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
       if (res.statusCode == 200 && mounted) {
         setState(() { 
           _allCoins = json.decode(res.body); 
+          GlobalFinance.allCoins = _allCoins;
           _filteredCoins = _allCoins;
           _loading = false; 
         });
@@ -357,7 +361,7 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                         decoration: const InputDecoration(
-                          hintText: "Wpisz kryptowalutę +200",
+                          hintText: "WPISZ KRYPTOWALUTĘ +200",
                           hintStyle: TextStyle(color: Colors.white24, fontSize: 14),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 14),
@@ -386,7 +390,7 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
                             children: [
                               Icon(_showOnlyFavs ? Icons.star : Icons.star_border, color: Colors.amber, size: 18),
                               const SizedBox(width: 8),
-                              const Text("Ulubione", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              const Text("ULUBIONE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -562,9 +566,9 @@ class _CryptoDetailsState extends State<CryptoDetails> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(color: const Color(0xFF121212), borderRadius: BorderRadius.circular(28)),
               child: Column(children: [
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Kapitalizacja", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold)), Text("${GlobalFinance.sign}${widget.coin['market_cap'] ?? '984,231,000'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("KAPITALIZACJA", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold)), Text("${GlobalFinance.sign}${widget.coin['market_cap'] ?? '984,231,000'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))]),
                 const Divider(height: 30, color: Colors.white10),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Wolumen (24h)", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold)), Text("${GlobalFinance.sign}${widget.coin['total_volume'] ?? '42,120,500'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("WOLUMEN (24H)", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold)), Text("${GlobalFinance.sign}${widget.coin['total_volume'] ?? '42,120,500'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))]),
               ]),
             ),
           ),
@@ -657,7 +661,7 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
                           ),
                         ),
                         // MAŁY NAPIS POD SPODEM
-                        const Text("Zmień walutę", style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
+                        const Text("ZMIEŃ WALUTĘ", style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -676,10 +680,10 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
                             crossAxisSpacing: 15,
                             mainAxisSpacing: 15,
                             children: [
-                              _card("Złoto", _gold, 1.2, Colors.amber, Icons.diamond), 
-                              _card("Srebro", _silver, -0.8, Colors.blueGrey, Icons.lens_blur),
-                              _card("Platyna", _platinum, 0.4, Colors.indigoAccent, Icons.settings), 
-                              _card("Pallad", _palladium, -1.5, Colors.tealAccent, Icons.filter_hdr),
+                              _card("ZŁOTO", _gold, 1.2, Colors.amber, Icons.diamond), 
+                              _card("SREBRO", _silver, -0.8, Colors.blueGrey, Icons.lens_blur),
+                              _card("PLATYNA", _platinum, 0.4, Colors.indigoAccent, Icons.settings), 
+                              _card("PALLAD", _palladium, -1.5, Colors.tealAccent, Icons.filter_hdr),
                             ],
                           ),
                         ),
@@ -714,7 +718,7 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center, 
                                   children: [
-                                    const Padding(padding: EdgeInsets.only(bottom: 8), child: Text("Kruszec", style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold))),
+                                    const Padding(padding: EdgeInsets.only(bottom: 8), child: Text("KRUSZEC", style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold))),
                                     Container(
                                       height: 55, 
                                       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -743,7 +747,7 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center, 
                                   children: [
-                                    const Padding(padding: EdgeInsets.only(bottom: 8), child: Text("Gramy", style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold))),
+                                    const Padding(padding: EdgeInsets.only(bottom: 8), child: Text("GRAMY", style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold))),
                                     Container(
                                       height: 55, 
                                       decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.white10)),
@@ -768,7 +772,7 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
                           // WYNIK
                           Column(
                             children: [
-                              const Text("Wartość", style: TextStyle(color: Colors.white54, fontSize: 13, letterSpacing: 1)),
+                              const Text("WARTOŚĆ", style: TextStyle(color: Colors.white54, fontSize: 13, letterSpacing: 1)),
                               const SizedBox(height: 5),
                               FittedBox(
                                 fit: BoxFit.scaleDown,
@@ -833,7 +837,7 @@ class CurrencyExchangeScreen extends StatefulWidget {
 }
 
 class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
-  final _input = TextEditingController(text: "1000"); 
+  final _input = TextEditingController(text: "2"); 
   String _from = "USD", _to = "PLN";
 
   // Helper do flag
@@ -872,7 +876,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
                 child: Text("KANTOR", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 4, color: Colors.white))
               )
             ),
-            const Center(child: Text("Szybki przelicznik walut", style: TextStyle(color: Colors.white38, fontSize: 13, letterSpacing: 1))),
+            const Center(child: Text("SZYBKI PRZELICZNIK WALUT", style: TextStyle(color: Colors.white38, fontSize: 13, letterSpacing: 1))),
             
             const SizedBox(height: 30),
             
@@ -890,7 +894,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
                 child: Column(
                   children: [
                     // GÓRA - Z WALUTY
-                    _currencyRow("Sprzedajesz", _from, _input, (v) => setState(() => _from = v!), false),
+                    _currencyRow("SPRZEDAJESZ", _from, _input, (v) => setState(() => _from = v!), false),
                     
                     // PRZYCISK ZAMIANY (CZERWONY + BIAŁE STRZAŁKI)
                     Padding(
@@ -902,21 +906,21 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
                           GestureDetector(
                             onTap: () { setState(() { var t = _from; _from = _to; _to = t; }); },
                             child: Container(
-                              padding: const EdgeInsets.all(10), // Nieco większy padding dla wygody
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.redAccent, // CZERWONY KOLOR
+                                color: Colors.redAccent, 
                                 shape: BoxShape.circle, 
-                                boxShadow: [BoxShadow(color: Colors.redAccent.withOpacity(0.4), blurRadius: 12)] // Czerwona poświata
+                                boxShadow: [BoxShadow(color: Colors.redAccent.withOpacity(0.4), blurRadius: 12)]
                               ),
-                              child: const Icon(Icons.swap_vert_rounded, color: Colors.white, size: 26), // BIAŁE STRZAŁKI
+                              child: const Icon(Icons.swap_vert_rounded, color: Colors.white, size: 26),
                             ),
                           )
                         ],
                       ),
                     ),
 
-                    // DÓŁ - NA WALUTĘ
-                    _currencyRow("Kupujesz", _to, TextEditingController(text: result.toStringAsFixed(2)), (v) => setState(() => _to = v!), true),
+                    // DÓŁ - NA WALUTĘ (Zmieniono na OTRZYMUJESZ)
+                    _currencyRow("OTRZYMUJESZ", _to, TextEditingController(text: result.toStringAsFixed(2)), (v) => setState(() => _to = v!), true),
                   ],
                 ),
               ),
@@ -924,7 +928,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
             
             const SizedBox(height: 30),
             
-            // NAGŁÓWEK LISTY - TERAZ WYŚRODKOWANY
+            // NAGŁÓWEK LISTY
             const Center(
               child: Padding(
                 padding: EdgeInsets.only(bottom: 15),
@@ -959,7 +963,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text("$target / PLN", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
-                              const Text("Kurs średni", style: TextStyle(color: Colors.white24, fontSize: 11)),
+                              const Text("ŚREDNI KURS", style: TextStyle(color: Colors.white24, fontSize: 11)),
                             ],
                           ),
                         ]),
@@ -998,6 +1002,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
                 controller: c,
                 readOnly: lock,
                 keyboardType: TextInputType.number,
+                onChanged: (value) => setState(() {}), // TO POWODUJE AUTOMATYCZNE OŚWIEŻANIE
                 style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white), 
                 decoration: const InputDecoration(border: InputBorder.none, isDense: true, hintText: "0.00", hintStyle: TextStyle(color: Colors.white10)),
               )
@@ -1031,44 +1036,71 @@ class AssetBankScreen extends StatefulWidget {
 }
 
 class _AssetBankScreenState extends State<AssetBankScreen> {
-  // Przykładowe portfolio - TERAZ Z LINKAMI DO OBRAZKÓW DLA KRYPTO
+  // 1. TWOJE PORTFOLIO (STARTOWE)
   final List<Map<String, dynamic>> _portfolio = [
-    {'type': 'CRYPTO', 'name': 'Bitcoin', 'symbol': 'BTC', 'amount': 0.45, 'price': 96500.0, 'image': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', 'color': const Color(0xFFF7931A), 'change': 2.45},
-    {'type': 'CRYPTO', 'name': 'Ethereum', 'symbol': 'ETH', 'amount': 12.5, 'price': 2750.0, 'image': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', 'color': const Color(0xFF627EEA), 'change': -1.12},
-    {'type': 'METAL', 'name': 'Złoto', 'symbol': 'XAU', 'amount': 50.0, 'price': 85.40, 'icon': Icons.diamond_outlined, 'color': const Color(0xFFFFD700), 'change': 0.85},
-    {'type': 'FIAT', 'name': 'Dolar', 'symbol': 'USD', 'amount': 12500.0, 'price': 1.0, 'icon': Icons.attach_money, 'color': const Color(0xFF00E676), 'change': 0.0},
-    {'type': 'CRYPTO', 'name': 'Solana', 'symbol': 'SOL', 'amount': 150.0, 'price': 195.0, 'image': 'https://assets.coingecko.com/coins/images/4128/large/solana.png', 'color': const Color(0xFF9945FF), 'change': 5.20},
+    {'type': 'CRYPTO', 'name': 'BITCOIN', 'symbol': 'BTC', 'amount': 0.45, 'price': 96500.0, 'image': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', 'color': const Color(0xFFF7931A), 'change': 2.45},
+    {'type': 'CRYPTO', 'name': 'ETHEREUM', 'symbol': 'ETH', 'amount': 12.5, 'price': 2750.0, 'image': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', 'color': const Color(0xFF627EEA), 'change': -1.12},
+    {'type': 'METAL', 'name': 'ZŁOTO', 'symbol': 'XAU', 'amount': 50.0, 'price': 85.40, 'icon': Icons.diamond_outlined, 'color': const Color(0xFFFFD700), 'change': 0.85},
+    {'type': 'FIAT', 'name': 'DOLAR', 'symbol': 'USD', 'amount': 12500.0, 'price': 1.0, 'icon': Icons.attach_money, 'color': const Color(0xFF00E676), 'change': 0.0},
+    {'type': 'CRYPTO', 'name': 'SOLANA', 'symbol': 'SOL', 'amount': 150.0, 'price': 195.0, 'image': 'https://assets.coingecko.com/coins/images/4128/large/solana.png', 'color': const Color(0xFF9945FF), 'change': 5.20},
   ];
 
-  // BAZA DANYCH (ZAKTUALIZOWANA O LINKI)
-  final List<Map<String, dynamic>> _database = [
-     {'type': 'METAL', 'name': 'Złoto', 'symbol': 'XAU', 'price': 85.40, 'icon': Icons.diamond, 'color': const Color(0xFFFFD700)},
-     {'type': 'METAL', 'name': 'Srebro', 'symbol': 'XAG', 'price': 1.05, 'icon': Icons.lens_blur, 'color': Colors.grey},
-     {'type': 'FIAT', 'name': 'Dolar', 'symbol': 'USD', 'price': 1.0, 'icon': Icons.attach_money, 'color': Colors.green},
-     {'type': 'FIAT', 'name': 'Euro', 'symbol': 'EUR', 'price': 1.08, 'icon': Icons.euro, 'color': Colors.blue},
-     {'type': 'CRYPTO', 'name': 'Bitcoin', 'symbol': 'BTC', 'price': 96500.0, 'image': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', 'color': Colors.orange},
-     {'type': 'CRYPTO', 'name': 'Ethereum', 'symbol': 'ETH', 'price': 2750.0, 'image': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', 'color': const Color(0xFF627EEA)},
-     {'type': 'CRYPTO', 'name': 'Solana', 'symbol': 'SOL', 'price': 195.0, 'image': 'https://assets.coingecko.com/coins/images/4128/large/solana.png', 'color': const Color(0xFF9945FF)},
-     {'type': 'CRYPTO', 'name': 'Cardano', 'symbol': 'ADA', 'price': 0.65, 'image': 'https://assets.coingecko.com/coins/images/975/large/cardano.png', 'color': Colors.blueAccent},
-  ];
-
+  // 2. FUNKCJA OTWIERAJĄCA MODAL Z PEŁNĄ BAZĄ (250 KRYPTO + 6 METALI + FIAT)
   void _openAddModal() {
+    List<Map<String, dynamic>> fullDatabase = [];
+
+    // DODAJEMY 6 METALI
+    fullDatabase.addAll([
+      {'type': 'METAL', 'name': 'ZŁOTO', 'symbol': 'XAU', 'price': 2655.80, 'icon': Icons.diamond, 'color': Colors.amber},
+      {'type': 'METAL', 'name': 'SREBRO', 'symbol': 'XAG', 'price': 31.45, 'icon': Icons.lens_blur, 'color': Colors.blueGrey},
+      {'type': 'METAL', 'name': 'PLATYNA', 'symbol': 'XPT', 'price': 985.20, 'icon': Icons.settings, 'color': Colors.indigoAccent},
+      {'type': 'METAL', 'name': 'PALLAD', 'symbol': 'XPD', 'price': 1060.10, 'icon': Icons.filter_hdr, 'color': Colors.tealAccent},
+      {'type': 'METAL', 'name': 'MIEDŹ', 'symbol': 'XCU', 'price': 4.15, 'icon': Icons.architecture, 'color': Colors.orange},
+      {'type': 'METAL', 'name': 'ROD', 'symbol': 'XRH', 'price': 4750.0, 'icon': Icons.auto_awesome, 'color': Colors.blue},
+    ]);
+
+    // DODAJEMY WALUTY Z KANTORA
+    GlobalFinance.rates.forEach((code, rate) {
+      fullDatabase.add({
+        'type': 'FIAT',
+        'name': _getCurrencyFullName(code),
+        'symbol': code,
+        'price': 1.0 / rate,
+        'icon': Icons.payments_outlined,
+        'color': Colors.greenAccent,
+      });
+    });
+
+    // DODAJEMY 250 KRYPTO (Z ZABEZPIECZENIEM PRZED PUSTĄ LISTĄ)
+    if (GlobalFinance.allCoins != null) {
+      for (var coin in GlobalFinance.allCoins) {
+        fullDatabase.add({
+          'type': 'CRYPTO',
+          'name': coin['name'].toString().toUpperCase(),
+          'symbol': coin['symbol'].toString().toUpperCase(),
+          'price': (coin['current_price'] as num).toDouble(),
+          'image': coin['image'],
+          'color': Colors.amber,
+        });
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF121212),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
       builder: (ctx) => _AssetSelectionModal(
-        database: _database,
+        database: fullDatabase,
         onSelected: (item) {
           Navigator.pop(ctx);
-          double randomChange = (Random().nextDouble() * 20) - 10;
-          _openEditModal(item: {...item, 'change': randomChange}, isNew: true);
+          _openEditModal(item: {...item, 'change': 0.0}, isNew: true);
         },
       ),
     );
   }
 
+  // 3. FUNKCJA EDYCJI
   void _openEditModal({required Map<String, dynamic> item, bool isNew = false, int? index}) {
     final controller = TextEditingController(text: isNew ? '' : item['amount'].toString());
     showDialog(
@@ -1077,75 +1109,79 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
         backgroundColor: const Color(0xFF252535),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         title: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          // Tutaj też obsługa ikony vs obrazka w tytule modala
-          item.containsKey('image') 
-            ? Image.network(item['image'], width: 24, height: 24)
-            : Icon(item['icon'], color: item['color']),
-          const SizedBox(width: 10),
-          Flexible(child: Text(isNew ? "Dodaj ${item['name']}" : "Edytuj ${item['name']}", style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+          item.containsKey('image')
+              ? CircleAvatar(radius: 15, backgroundColor: Colors.transparent, backgroundImage: NetworkImage(item['image']))
+              : Icon(item['icon'], color: item['color']),
+          const SizedBox(width: 12),
+          Flexible(child: Text(isNew ? "DODAJ ${item['name']}" : "EDYTUJ ${item['name']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18), overflow: TextOverflow.ellipsis)),
         ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Text("WPROWADŹ ILOŚĆ:", style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 15),
             TextField(
               controller: controller,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               autofocus: true,
-              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 hintText: "0.00",
-                hintStyle: const TextStyle(color: Colors.white24),
+                hintStyle: const TextStyle(color: Colors.white10),
                 filled: true,
-                fillColor: Colors.black38,
+                fillColor: Colors.black26,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                 suffixText: item['symbol'],
               ),
             ),
-            const SizedBox(height: 20),
-            if (!isNew && index != null)
+            if (!isNew && index != null) ...[
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    setState(() => _portfolio.removeAt(index));
-                    Navigator.pop(ctx);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.redAccent),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    foregroundColor: Colors.redAccent
-                  ),
+                  onPressed: () { setState(() { _portfolio.removeAt(index); }); Navigator.pop(ctx); },
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.redAccent), foregroundColor: Colors.redAccent),
                   icon: const Icon(Icons.delete_forever),
                   label: const Text("USUŃ Z PORTFELA"),
                 ),
               )
+            ]
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Anuluj", style: TextStyle(color: Colors.white54))),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("ANULUJ", style: TextStyle(color: Colors.white54))),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6C63FF), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12)),
             onPressed: () {
               double? val = double.tryParse(controller.text.replaceAll(',', '.'));
-              if (val != null && val >= 0) {
+              if (val != null) {
                 setState(() {
-                  if (isNew) {
-                    _portfolio.add({...item, 'amount': val});
-                  } else if (index != null) {
-                    _portfolio[index]['amount'] = val;
-                  }
+                  if (isNew) { _portfolio.add({...item, 'amount': val}); }
+                  else if (index != null) { _portfolio[index]['amount'] = val; }
                 });
                 Navigator.pop(ctx);
               }
             },
-            child: const Text("Zapisz"),
+            child: const Text("ZAPISZ"),
           )
         ],
       ),
     );
   }
 
+  // 4. POMOCNIK NAZW WALUT
+  String _getCurrencyFullName(String code) {
+    switch (code) {
+      case 'USD': return 'DOLAR AMERYKAŃSKI';
+      case 'PLN': return 'ZŁOTY POLSKI';
+      case 'EUR': return 'EURO';
+      case 'CHF': return 'FRANK SZWAJCARSKI';
+      case 'GBP': return 'FUNT BRYTYJSKI';
+      default: return 'WALUTA OBCA';
+    }
+  }
+
+  // TUTAJ ZACZYNA SIĘ TWÓJ @override Widget build... (TEGO NIE NADPISUJ)
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -1426,12 +1462,12 @@ class _RelaxationHubState extends State<RelaxationHub> {
             Expanded(child: GridView.count(
               crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20, 
               children: [
-                _tile("Tic Tac Toe", Icons.grid_3x3_rounded, Colors.blue, 1), 
-                _tile("Clicker", Icons.touch_app_rounded, Colors.amber, 2), 
-                _tile("Refleks", Icons.bolt_rounded, Colors.redAccent, 3),
-                _tile("Memory", Icons.psychology_rounded, Colors.purpleAccent, 4),
-                _tile("Crypto Jump", Icons.rocket_launch, Colors.greenAccent, 5),
-                _tile("Catch Coin", Icons.savings_rounded, Colors.orangeAccent, 6),
+                _tile("TIC TAC TOE", Icons.grid_3x3_rounded, Colors.blue, 1), 
+                _tile("CLICKER", Icons.touch_app_rounded, Colors.amber, 2), 
+                _tile("REFLEKS", Icons.bolt_rounded, Colors.redAccent, 3),
+                _tile("MEMORY", Icons.psychology_rounded, Colors.purpleAccent, 4),
+                _tile("CRYPTO JUMP", Icons.rocket_launch, Colors.greenAccent, 5),
+                _tile("CATCH COIN", Icons.savings_rounded, Colors.orangeAccent, 6),
               ],
             ))
           ]),
@@ -1462,7 +1498,14 @@ class _TTTGameState extends State<_TTTGame> {
   @override void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      showGameInfo(context, "Kółko i Krzyżyk", "Klasyczna gra logiczna.\nWybierz poziom trudności i pokonaj bota.", () => setState(() => playing = true));
+      showGameInfo(
+        context, 
+        "KÓŁKO I KRZYŻYK", 
+        "CEL: UŁÓŻ 3 ZNAKI W LINII (POZIOMO, PIONOWO LUB NA UKOS).\n\n"
+        "TRYBY: ŁATWY, ŚREDNI ORAZ TRUDNY.\n\n"
+        "POKONAJ BOTA, BLOKUJĄC GO I PLANUJĄC SWOJE RUCHY!", 
+        () => setState(() => playing = true)
+      );
     });
   }
 
@@ -1526,7 +1569,7 @@ class _ClickerGame extends StatefulWidget {
 }
 class _ClickerState extends State<_ClickerGame> {
   int count=0, time=10; List<int> rank=[0,0,0]; bool playing=false, active=false; Color bg=Colors.amber; Timer? t; List<FlyingParticle> parts=[];
-  @override void initState() { super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(context, "Clicker Pro", "10 sekund.\nKlikaj jak szalony!", start, warning: true)); 
+  @override void initState() { super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(context, "CLICKER", "MASZ DOKŁADNIE 10 SEKUND NA POKAZANIE SWOJEJ SZYBKOŚCI.\n\n1. CEL: KLIKAJ W DUŻE KOŁO NA ŚRODKU EKRANU JAK NAJSZYBCIEJ POTRAFISZ. KAŻDY TWÓJ KLIK TO PUNKT ORAZ EFEKTOWNA EKSPLOZJA IKON KRUSZCÓW I WALUT.\n\n2. RANKING: TWOJE TRZY NAJLEPSZE WYNIKI SĄ AUTOMATYCZNIE ZAPISYWANE W TABELI REKORDÓW NA DOLE EKRANU.\n\nCZY DASZ RADĘ POBIĆ SWÓJ WŁASNY REKORD I OSIĄGNĄĆ TYTUŁ MISTRZA KLIKANIA?", start, warning: true)); 
     Timer.periodic(const Duration(milliseconds: 16), (t){ if(mounted && parts.isNotEmpty) setState((){ for(var p in parts){p.x+=p.speedX;p.y+=p.speedY;p.opacity-=0.02;} parts.removeWhere((p)=>p.opacity<=0); }); }); }
   void start() { setState((){ playing=true; active=true; count=0; time=10; parts.clear(); }); t=Timer.periodic(const Duration(seconds:1), (ti){ if(time==0){ti.cancel(); setState((){active=false; rank.add(count); rank.sort((a,b)=>b.compareTo(a)); if(rank.length>3)rank=rank.sublist(0,3);}); } else { if(mounted) setState(()=>time--); } }); }
   void tap() { if(active) { setState((){ count++; bg=Colors.primaries[Random().nextInt(Colors.primaries.length)]; 
@@ -1550,145 +1593,693 @@ class _ClickerState extends State<_ClickerGame> {
   }
 }
 
-// 3. REFLEKS
+// 3. REFLEKS - WERSJA PRO KRYPTO (BEZ NAPISÓW PODPOWIADAJĄCYCH)
 class _ReflexGame extends StatefulWidget {
-  final VoidCallback onBack; const _ReflexGame({required this.onBack}); @override State<_ReflexGame> createState() => _ReflexState();
+  final VoidCallback onBack;
+  const _ReflexGame({required this.onBack});
+  @override
+  State<_ReflexGame> createState() => _ReflexState();
 }
+
 class _ReflexState extends State<_ReflexGame> {
-  String m=""; Color bg=Colors.black; Timer? t; bool playing=false; int lvl=1;
+  String m = "";
+  Color bg = Colors.black;
+  Timer? t;
+  bool playing = false;
+  int lvl = 1;
+  
+  // LOGIKA IKON KRYPTO
+  String? currentCoinImageUrl;
+  List<int> usedCoinIndices = [];
+
+  // RUCH
+  double emojiX = 0.5;
+  double emojiDir = 0.02;
+  Timer? movementTimer;
+
   List<Color> colors = [Colors.red, Colors.blue, Colors.purple, Colors.orange, Colors.pink, Colors.yellow];
   List<String> praises = ["FANTASTYCZNIE! 🔥", "MISTRZ! 🚀", "BŁYSKAWICA! ⚡", "IDEALNIE! ⭐", "NIESAMOWITE! 🤯"];
-  
-  @override void initState() { super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(context, "Ruletka Refleksu", "Kliknij TYLKO gdy zobaczysz CZYSTY ZIELONY.\nKażdy błąd kończy grę.", start, warning: true)); }
-  void start() { setState((){ playing=true; lvl=1; m=""; }); nextLevel(); }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(
+      context, 
+      "KRYPTO REFLEKS PRO", 
+      "ZASADA JEST JEDNA: KLIKNIJ, GDY TŁO STANIE SIĘ ZIELONE.\n\n"
+      "BRAK NAPISÓW. TYLKO TY I TWÓJ REFLEKS!\n\n"
+      "UWAŻAJ, GRA PRZYSPIESZA Z KAŻDYM POZIOMEM.", 
+      start, 
+      warning: true
+    ));
+    
+    movementTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (mounted && playing && currentCoinImageUrl != null && !m.startsWith("POZIOM")) {
+        setState(() {
+          emojiX += emojiDir;
+          if (emojiX >= 0.85 || emojiX <= 0.15) emojiDir = -emojiDir;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    t?.cancel();
+    movementTimer?.cancel();
+    super.dispose();
+  }
+
+  void start() {
+    t?.cancel();
+    usedCoinIndices.clear();
+    setState(() {
+      playing = true;
+      lvl = 1;
+      m = "";
+      bg = Colors.black;
+      currentCoinImageUrl = null;
+    });
+    nextLevel();
+  }
+
   void nextLevel() {
-    setState(() { bg = Colors.black; m = "POZIOM $lvl"; });
+    if (!mounted) return;
+    setState(() {
+      bg = Colors.black;
+      m = "POZIOM $lvl";
+      currentCoinImageUrl = null;
+    });
+
     Timer(const Duration(seconds: 1), () {
-      t = Timer.periodic(Duration(milliseconds: (700 - (lvl*50)).clamp(200, 1000)), (ti) {
-        if(!mounted) return;
-        if(Random().nextDouble() < 0.25) {
-          setState(() { bg = const Color(0xFF00C853); m = ""; }); 
-        } else {
-          setState(() { bg = colors[Random().nextInt(colors.length)]; m = Random().nextBool() ? ["🐸","🐢","🍀"][Random().nextInt(3)] : ""; });
-        }
+      if (!mounted) return;
+      // PRZYSPIESZENIE: Skracamy czas co poziom o 60ms
+      int speed = (700 - (lvl * 60)).clamp(150, 1000);
+      
+      t = Timer.periodic(Duration(milliseconds: speed), (ti) {
+        if (!mounted) { ti.cancel(); return; }
+        
+        setState(() {
+          if (Random().nextDouble() < 0.25) {
+            bg = const Color(0xFF00C853);
+            m = ""; // USUNIĘTO NAPIS "KLIKAJ"
+            currentCoinImageUrl = null;
+          } else {
+            bg = colors[Random().nextInt(colors.length)];
+            m = "";
+            _pickRandomCoin();
+            emojiX = Random().nextDouble().clamp(0.2, 0.8);
+            emojiDir = (0.025 + (lvl * 0.006)).clamp(0.02, 0.07) * (Random().nextBool() ? 1 : -1);
+          }
+        });
       });
     });
   }
-  @override Widget build(BuildContext context) {
-    if(!playing) return const SizedBox();
-    return Scaffold(backgroundColor: bg, body: GestureDetector(onTap: (){
+
+  void _pickRandomCoin() {
+    if (GlobalFinance.allCoins.isEmpty) return;
+    if (usedCoinIndices.length >= GlobalFinance.allCoins.length) usedCoinIndices.clear();
+
+    int idx;
+    do {
+      idx = Random().nextInt(GlobalFinance.allCoins.length);
+    } while (usedCoinIndices.contains(idx));
+
+    usedCoinIndices.add(idx);
+    currentCoinImageUrl = GlobalFinance.allCoins[idx]['image'];
+  }
+
+  void handleTap() {
+    if (bg == const Color(0xFF00C853)) {
       t?.cancel();
-      if(bg == const Color(0xFF00C853)) {
-        int ms = (700-(lvl*50)).clamp(200,700);
-        setState(() { lvl++; bg=Colors.black; });
-        showDialog(context: context, barrierDismissible: false, builder: (c) {
-          Future.delayed(const Duration(milliseconds: 1000), () { if(mounted && Navigator.canPop(c)) Navigator.of(c).pop(); });
-          return AlertDialog(backgroundColor: Colors.transparent, content: Column(mainAxisSize: MainAxisSize.min, children:[
-             Text(praises[Random().nextInt(praises.length)], style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
-             Text("~${ms}ms", style: const TextStyle(color: Colors.white, fontSize: 20))
-          ]));
-        }).then((_) => nextLevel());
-      } else {
-        setState(() { bg=Colors.black; });
-        showDialog(context: context, barrierDismissible: false, builder: (c)=>buildGameOverScreen(scoreInfo: "Dotarłeś do poziomu $lvl", onRestart: start, onExit: widget.onBack, title: "POMYŁKA!"));
-      }
-    }, child: Container(color: Colors.transparent, width: double.infinity, height: double.infinity, child: Center(child: Text(m, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold))))));
+      int currentSpeed = (700 - (lvl * 60)).clamp(150, 700);
+      String praise = praises[Random().nextInt(praises.length)];
+      
+      setState(() {
+        lvl++;
+        bg = Colors.black;
+        m = "";
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) {
+          Future.delayed(const Duration(milliseconds: 800), () {
+            if (Navigator.canPop(c)) Navigator.of(c).pop();
+          });
+          return AlertDialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(praise, textAlign: TextAlign.center, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                Text("REAKCJA: $currentSpeed ms", style: const TextStyle(color: Colors.white, fontSize: 20)),
+              ],
+            ),
+          );
+        },
+      ).then((_) => nextLevel());
+    } else if (bg != Colors.black) {
+      t?.cancel();
+      setState(() { playing = false; bg = Colors.black; });
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => buildGameOverScreen(
+          scoreInfo: "Zatrzymano na poziomie $lvl",
+          onRestart: () { Navigator.of(c).pop(); start(); },
+          onExit: () { Navigator.of(c).pop(); widget.onBack(); },
+          title: "ZA WCZEŚNIE!",
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!playing) return const SizedBox();
+    return Scaffold(
+      backgroundColor: bg,
+      body: GestureDetector(
+        onTap: handleTap,
+        child: Container(
+          color: Colors.transparent,
+          width: double.infinity,
+          height: double.infinity,
+          child: Stack(
+            children: [
+              // Ekran zapowiedzi poziomu
+              if (m.startsWith("POZIOM"))
+                Center(child: Text(m, style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2))),
+              
+              // Dynamiczna ikona krypto (przeszkadzajka)
+              if (currentCoinImageUrl != null)
+                Align(
+                  alignment: FractionalOffset(emojiX, 0.5),
+                  child: Image.network(currentCoinImageUrl!, width: 140, height: 140),
+                ),
+                
+              Positioned(
+                top: 50,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () { t?.cancel(); widget.onBack(); },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
+// =============================================================================
+// 4. MEMORY - NAPRAWIONA WERSJA (BRAK BŁĘDÓW TYPÓW I CZCIONEK)
+// =============================================================================
 
-// 4. MEMORY
 class _MemoryGame extends StatefulWidget {
-  final VoidCallback onBack; const _MemoryGame({required this.onBack}); @override State<_MemoryGame> createState() => _MemoryGameState();
+  final VoidCallback onBack;
+  const _MemoryGame({super.key, required this.onBack});
+  @override
+  State<_MemoryGame> createState() => _MemoryGameState();
 }
+
 class _MemoryGameState extends State<_MemoryGame> {
-  List<IconData> all = [Icons.currency_bitcoin, Icons.currency_exchange, Icons.monetization_on, Icons.attach_money, Icons.euro, Icons.currency_pound];
-  List<IconData> cards=[]; List<bool> f=[], s=[]; List<int> sel=[]; int score=0; bool playing=false;
-  @override void initState() { super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(context, "Memory", "Znajdź pary. Ułóż całość by zdobyć punkt.", start)); }
-  void start() { List<IconData> p=[...all,...all]; p.shuffle(); setState((){ cards=p; f=List.filled(12,false); s=List.filled(12,false); sel=[]; playing=true; }); }
-  void tap(int i) {
-    if(sel.length<2 && !f[i] && !s[i]) {
-      setState((){ f[i]=true; sel.add(i); });
-      if(sel.length==2) {
-        if(cards[sel[0]]==cards[sel[1]]) {
-          setState((){ s[sel[0]]=true; s[sel[1]]=true; sel.clear(); });
-          if(s.every((x)=>x)) { score++; Timer(const Duration(seconds:1), start); }
-        } else { Timer(const Duration(seconds:1), (){ if(mounted) setState((){ f[sel[0]]=false; f[sel[1]]=false; sel.clear(); }); }); }
+  int level = 1;
+  int score = 0;
+  bool playing = false;
+  bool isLevelIntro = false;
+  String motivationalText = "POWODZENIA 🚀";
+
+  // ZMIENNE DO GRY
+  List<Map<String, dynamic>> cards = [];
+  List<bool> flipped = [];
+  List<bool> solved = [];
+  List<int> selectedIndices = [];
+
+  final List<String> praises = [
+    "ŚWIETNA ROBOTA! 🔥", "NIEZŁY REFLEKS! ⚡", "JESTEŚ MISTRZEM! 🏆",
+    "DAWAJ DALEJ! 💪", "FENOMENALNIE! ✨", "CO ZA PAMIĘĆ! 🧠"
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(
+      context, 
+      "MEMORY", 
+      "ZNAJDŹ PARY.\n\nIM WYŻSZY POZIOM, TYM WIĘCEJ KART!\n\nPOWODZENIA!", 
+      prepareLevel
+    ));
+  }
+
+  void prepareLevel() {
+    setState(() {
+      isLevelIntro = true;
+      playing = false;
+      if (level > 1) {
+        motivationalText = praises[Random().nextInt(praises.length)];
+      }
+    });
+    Timer(const Duration(seconds: 2), () {
+      if (mounted) startLevel();
+    });
+  }
+
+  void startLevel() {
+    int pairCount = level + 1; 
+    
+    // POBIERANIE IKON (NAPRAWIONA LOGIKA TYPÓW)
+    List pool = (GlobalFinance.allCoins != null && GlobalFinance.allCoins.isNotEmpty) 
+        ? GlobalFinance.allCoins 
+        : [
+            {'image': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', 'name': 'BTC'},
+            {'image': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', 'name': 'ETH'},
+          ];
+
+    List<Map<String, dynamic>> tempCards = []; // Tymczasowa lista map
+    var random = Random();
+
+    for (int i = 0; i < pairCount; i++) {
+      var asset = pool[random.nextInt(pool.length)];
+      Color pairColor = HSVColor.fromAHSV(1.0, random.nextDouble() * 360, 0.7, 0.9).toColor();
+      
+      Map<String, dynamic> cardData = {
+        'asset': asset,
+        'color': pairColor,
+        'id': i,
+      };
+      
+      tempCards.add(cardData);
+      tempCards.add(cardData);
+    }
+
+    tempCards.shuffle();
+
+    setState(() {
+      cards = tempCards; // TERAZ TYPY SIĘ ZGADZAJĄ
+      flipped = List.filled(cards.length, false);
+      solved = List.filled(cards.length, false);
+      selectedIndices = [];
+      isLevelIntro = false;
+      playing = true;
+    });
+  }
+
+  void tapCard(int i) {
+    if (selectedIndices.length < 2 && !flipped[i] && !solved[i]) {
+      setState(() { flipped[i] = true; selectedIndices.add(i); });
+      if (selectedIndices.length == 2) {
+        if (cards[selectedIndices[0]]['id'] == cards[selectedIndices[1]]['id']) {
+          setState(() {
+            solved[selectedIndices[0]] = true;
+            solved[selectedIndices[1]] = true;
+            selectedIndices.clear();
+          });
+          if (solved.every((x) => x)) {
+            score += level * 10;
+            level++;
+            Timer(const Duration(milliseconds: 600), prepareLevel);
+          }
+        } else {
+          Timer(const Duration(milliseconds: 700), () {
+            if (mounted) setState(() { flipped[selectedIndices[0]] = false; flipped[selectedIndices[1]] = false; selectedIndices.clear(); });
+          });
+        }
       }
     }
   }
-  @override Widget build(BuildContext context) {
-    if(!playing) return const SizedBox();
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLevelIntro) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // NAPRAWIONE: FontWeight.w900 zamiast .black
+              Text("POZIOM $level", style: const TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 20),
+              Text(motivationalText, style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!playing) return const SizedBox();
+
+    // DYNAMICZNE SKALOWANIE
+    int crossAxisCount = level < 3 ? 2 : (level < 7 ? 3 : 4);
+    double iconSize = level < 10 ? 40 : 25;
+
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text("Punkty: $score")), leading: const SizedBox(), actions: [const SizedBox(width: 48)]),
-      body: Column(children: [
-        Expanded(child: GridView.builder(padding: const EdgeInsets.all(20), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 10, mainAxisSpacing: 10), itemCount: 12, itemBuilder: (c,i)=>GestureDetector(onTap:()=>tap(i), child:Container(decoration:BoxDecoration(color: (f[i]||s[i])?Colors.amber:Colors.black, borderRadius:BorderRadius.circular(10), border:Border.all(color:Colors.white24)), child:Center(child: (f[i]||s[i])?Icon(cards[i],size:40,color:Colors.black):const Icon(Icons.help_outline,color:Colors.white10)))))),
-        Padding(padding: const EdgeInsets.only(bottom: 30), child: FloatingActionButton(backgroundColor: Colors.white10, onPressed: widget.onBack, child: const Icon(Icons.close, color: Colors.white)))
-      ]),
+      backgroundColor: const Color(0xFF0A0A0F),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, elevation: 0,
+        title: Text("LVL: $level | PKT: $score", style: const TextStyle(fontWeight: FontWeight.w900)),
+        centerTitle: true, leading: const SizedBox(),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 10, mainAxisSpacing: 10,
+              ),
+              itemCount: cards.length,
+              itemBuilder: (context, i) {
+                bool isVisible = flipped[i] || solved[i];
+                var asset = cards[i]['asset'];
+                return GestureDetector(
+                  onTap: () => tapCard(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    decoration: BoxDecoration(
+                      color: isVisible ? cards[i]['color'] : const Color(0xFF16161E),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: isVisible ? Colors.white : Colors.white10, width: 2),
+                    ),
+                    child: Center(
+                      child: isVisible 
+                        ? (asset['image'] != null 
+                            ? Image.network(asset['image'], width: iconSize, height: iconSize) 
+                            : Icon(Icons.diamond, size: iconSize, color: Colors.white))
+                        : Icon(Icons.help_outline, size: iconSize, color: Colors.white10),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 30),
+            child: FloatingActionButton.small(
+              backgroundColor: Colors.white10,
+              onPressed: widget.onBack,
+              child: const Icon(Icons.close, color: Colors.white),
+            ),
+          )
+        ],
+      ),
     );
   }
 }
 
-// 5. CRYPTO JUMP
-class _CryptoJumpGame extends StatefulWidget {
-  final VoidCallback onBack; const _CryptoJumpGame({required this.onBack}); @override State<_CryptoJumpGame> createState() => _CryptoJumpGameState();
-}
-class _CryptoJumpGameState extends State<_CryptoJumpGame> {
-  double pX=0.5, pY=0.5, vY=0.0, g=-0.002, jS=0.035; 
-  List<Map<String, dynamic>> plats=[]; 
-  List<Offset> stars=[];
-  double scrY=0.0; int score=0; bool playing=false, go=false; Timer? t;
+// =============================================================================
+// 5. CRYPTO JUMP ULTIMATE - NO ASSETS, STABLE TYPES & ROCKET BOOST
+// =============================================================================
 
-  @override void initState() { super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(context, "Crypto Jump", "Skacz na zielone belki (💰).\nUważaj na pęknięte! 🚫\nSprężyny dają boost. 🚀\nPrzesuwaj palcem po ekranie.", start)); }
-  void start() { 
-    setState((){ playing=true; go=false; score=0; pX=0.5; pY=0.2; vY=jS; scrY=0.0; plats=[{'x':0.5, 'y':0.1, 'type':0}]; stars=List.generate(20, (i)=>Offset(Random().nextDouble(), Random().nextDouble())); for(int i=1;i<10;i++) genPlat(0.1+(i*0.2)); }); 
-    t=Timer.periodic(const Duration(milliseconds:16), (tk){
-      if(!mounted){tk.cancel();return;}
-      setState((){
-        vY+=g; pY+=vY;
-        if(pY>0.5) { 
-          double d=pY-0.5; pY=0.5; scrY+=d; score+=(d*1000).toInt();
-          for(var p in plats) p['y']-=d;
-          plats.removeWhere((p)=>p['y']<-0.1);
-          while(plats.length<10) genPlat(plats.last['y']+0.2+Random().nextDouble()*0.1);
-          for(int i=0;i<stars.length;i++) { stars[i]=Offset(stars[i].dx, stars[i].dy-d*0.2); if(stars[i].dy<0) stars[i]=Offset(Random().nextDouble(), 1.0); }
+class _CryptoJumpGame extends StatefulWidget {
+  final VoidCallback onBack;
+  const _CryptoJumpGame({super.key, required this.onBack});
+  @override
+  State<_CryptoJumpGame> createState() => _CryptoJumpGameState();
+}
+
+class _CryptoJumpGameState extends State<_CryptoJumpGame> {
+  // FIZYKA
+  double pX = 0.5, pY = 0.2, vY = 0.0, g = -0.0018, jS = 0.032;
+  List<Map<String, dynamic>> plats = [];
+  List<Map<String, dynamic>> coins = [];
+  List<Map<String, dynamic>> items = []; 
+  List<Map<String, dynamic>> obstacles = []; 
+  List<Offset> stars = [];
+  
+  int score = 0, sessionCoins = 0, multiplier = 1, _lastCoinGroupScore = -10000;
+  int _lastMovingPlatScore = -1000;
+  bool playing = false, isGameOver = false, isSelectingSkin = false;
+  Timer? gameTimer, multiTimer;
+  int selectedSkinIndex = 0;
+
+  final List<List<Color>> bgGradients = [
+    [const Color(0xFF0A0A1A), const Color(0xFF1A1A3A)],
+    [const Color(0xFF1A0A1A), const Color(0xFF3A1A1A)],
+    [const Color(0xFF0A1A0A), const Color(0xFF1A3A1A)],
+    [const Color(0xFF1A1A0A), const Color(0xFF3A3A1A)],
+    [const Color(0xFF0A1A1A), const Color(0xFF1A3A3A)],
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (GlobalFinance.ownedSkinIndices.length <= 1) GlobalFinance.ownedSkinIndices = [0, 1];
+    WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(
+      context, 
+      "CRYPTO JUMP", 
+      "CEL: SKACZ JAK NAJWYŻEJ I ZBIERAJ MONETY.\n\n"
+      "ZASADY: SZUKAJ IKON X2 DLA BONUSU! BIAŁE RAKIETY WYBIJAJĄ CIĘ EKSTREMALNIE WYSOKO.\n\n"
+      "PRZEGRANA: UWAŻAJ! UPADEK LUB ZDERZENIE Z RUCHOMĄ CZERWONĄ PRZESZKODĄ KOŃCZY GRĘ.\n\n"
+      "SKLEP: WYBIERZ SKIN PRZED STARTEM. BTC I ETH SĄ DARMOWE.", 
+      () => setState(() => isSelectingSkin = true)
+    ));
+  }
+
+  void start() {
+    setState(() {
+      playing = true; isGameOver = false; isSelectingSkin = false;
+      score = 0; sessionCoins = 0; multiplier = 1; 
+      _lastCoinGroupScore = -10000; _lastMovingPlatScore = 0;
+      pX = 0.5; pY = 0.2; vY = jS;
+      plats = [{'x': 0.5, 'y': 0.1, 'type': 0, 'color': Colors.green, 'dx': 0.0}];
+      coins = []; items = []; obstacles = [];
+      stars = List.generate(20, (i) => Offset(Random().nextDouble(), Random().nextDouble()));
+      for (int i = 1; i < 15; i++) genPlat(0.1 + (i * 0.15));
+    });
+    gameTimer?.cancel();
+    gameTimer = Timer.periodic(const Duration(milliseconds: 16), (t) => update());
+  }
+
+  void genPlat(double y) {
+    double x = 0.1 + Random().nextDouble() * 0.8;
+    bool easyMode = score < 1000; 
+    
+    int type = easyMode ? (Random().nextDouble() < 0.2 ? 1 : 0) : 
+               (score > 3000 && Random().nextDouble() < 0.15 ? 2 : (Random().nextDouble() < 0.1 ? 1 : 0));
+
+    double dx = 0.0;
+    if (score - _lastMovingPlatScore >= 1000) {
+      dx = (Random().nextBool() ? 1 : -1) * 0.0035;
+      _lastMovingPlatScore = score;
+    }
+
+    plats.add({'x': x, 'y': y, 'type': type, 'color': type == 2 ? Colors.brown : Colors.green, 'dx': dx});
+    
+    if (type == 2 || (score > 2000 && Random().nextDouble() < 0.1)) {
+       plats.add({'x': (x + 0.5) % 0.8 + 0.1, 'y': y, 'type': 0, 'color': Colors.green, 'dx': 0.0});
+    }
+
+    if (score > 1000 && (score - _lastCoinGroupScore) > 8000 && (score % 10000).abs() < 500) {
+      _lastCoinGroupScore = score;
+      for(int i=0; i<4; i++) coins.add({'x': x, 'y': y + 0.04 + (i*0.03)});
+    } else if (Random().nextDouble() < 0.12) {
+      coins.add({'x': x, 'y': y + 0.05});
+    }
+    
+    if (score > 1000 && Random().nextDouble() < 0.015) items.add({'x': (x + 0.3) % 0.9, 'y': y + 0.05});
+    
+    if (score > 2000 && Random().nextDouble() < 0.08) {
+      double obsX = (x + 0.5) % 0.8 + 0.1;
+      obstacles.add({'x': obsX, 'y': y + 0.12, 'dx': (Random().nextBool() ? 1 : -1) * 0.0045});
+      plats.add({'x': (obsX + 0.4) % 0.8 + 0.1, 'y': y + 0.05, 'type': 0, 'color': Colors.green, 'dx': 0.0});
+    }
+  }
+
+  void update() {
+    if (!mounted || isGameOver) return;
+    setState(() {
+      vY += g; pY += vY;
+      if (pY > 0.45) {
+        double diff = pY - 0.45; pY = 0.45; score += (diff * 1000).toInt();
+        for (var p in plats) p['y'] = (p['y'] as num).toDouble() - diff;
+        for (var c in coins) c['y'] = (c['y'] as num).toDouble() - diff;
+        for (var i in items) i['y'] = (i['y'] as num).toDouble() - diff;
+        for (var o in obstacles) o['y'] = (o['y'] as num).toDouble() - diff;
+        plats.removeWhere((p) => p['y'] < -0.1);
+        while (plats.length < 18) genPlat((plats.last['y'] as num).toDouble() + (score < 1000 ? 0.07 : 0.14));
+      }
+
+      for (var p in plats) {
+        if (p['dx'] != 0.0) {
+          p['x'] = (p['x'] as num).toDouble() + (p['dx'] as num).toDouble();
+          if (p['x'] < 0.05 || p['x'] > 0.95) p['dx'] = -(p['dx'] as num).toDouble();
         }
-        if(vY<0) {
-          for(var p in plats) {
-            if((pX-(p['x'] as num).toDouble()).abs()<0.15 && (pY-(p['y'] as num).toDouble()).abs()<0.05) {
-              if(p['type']==2) { plats.remove(p); } 
-              else { vY = p['type']==1 ? jS*2.5 : jS; } 
+      }
+      for (var o in obstacles) {
+        o['x'] = (o['x'] as num).toDouble() + (o['dx'] as num).toDouble();
+        if (o['x'] < 0.05 || o['x'] > 0.95) o['dx'] = -(o['dx'] as num).toDouble();
+      }
+
+      if (vY < 0) {
+        for (var p in plats) {
+          if ((pX - (p['x'] as num).toDouble()).abs() < 0.14 && (pY - (p['y'] as num).toDouble()).abs() < 0.04) {
+            if (p['type'] == 2) { plats.remove(p); break; }
+            else { 
+              vY = p['type'] == 1 ? jS * 2.5 : jS; 
+              p['color'] = Colors.primaries[Random().nextInt(Colors.primaries.length)]; 
             }
           }
         }
-        if(pY<-0.1) { tk.cancel(); setState(()=>go=true); }
+      }
+      
+      coins.removeWhere((c) {
+        if ((pX - (c['x'] as num).toDouble()).abs() < 0.1 && (pY - (c['y'] as num).toDouble()).abs() < 0.05) {
+          sessionCoins += multiplier; GlobalFinance.totalCoins += multiplier; return true;
+        } return false;
       });
+      
+      items.removeWhere((it) {
+        if ((pX - (it['x'] as num).toDouble()).abs() < 0.1 && (pY - (it['y'] as num).toDouble()).abs() < 0.05) {
+          multiplier = 2; multiTimer?.cancel();
+          multiTimer = Timer(const Duration(seconds: 10), () => setState(() => multiplier = 1)); return true;
+        } return false;
+      });
+
+      for (var o in obstacles) {
+        if ((pX - (o['x'] as num).toDouble()).abs() < 0.09 && (pY - (o['y'] as num).toDouble()).abs() < 0.07) gameOver();
+      }
+
+      if (pY < -0.1) gameOver();
     });
   }
-  void genPlat(double y) {
-    int type = 0;
-    if(score > 3000 && Random().nextDouble() < 0.1) type = 1; 
-    if(score > 5000 && Random().nextDouble() < 0.1) type = 2; 
-    plats.add({'x':Random().nextDouble(), 'y':y.toDouble(), 'type':type});
+
+  void gameOver() { gameTimer?.cancel(); setState(() => isGameOver = true); }
+  void move(double d) => setState(() => pX = (pX + d).clamp(0.05, 0.95));
+
+  Widget _modernCoin({double size = 20}) {
+    return Container(
+      width: size, height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        boxShadow: [BoxShadow(color: Colors.amber.withOpacity(0.5), blurRadius: 5)],
+        border: Border.all(color: Colors.white, width: 1.5)
+      ),
+      child: Center(child: Text("\$", style: TextStyle(color: const Color(0xFF5D4037), fontSize: size*0.6, fontWeight: FontWeight.w900))),
+    );
   }
-  void move(double d) => pX=(pX+d).clamp(0.0,1.0);
-  @override Widget build(BuildContext context) {
-    if(!playing) return const SizedBox();
-    return Scaffold(body: Stack(children: [
-      Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black, Color(0xFF111122)]))),
-      ...stars.map((s)=>Align(alignment: FractionalOffset(s.dx, s.dy), child: const Icon(Icons.star, color: Colors.white12, size: 4))),
-      ...plats.map((p)=>Align(alignment: FractionalOffset((p['x'] as num).toDouble(), 1-(p['y'] as num).toDouble()), child: Column(mainAxisSize: MainAxisSize.min, children: [
-        if(p['type']==1) const Icon(Icons.keyboard_double_arrow_up, size: 15, color: Colors.white),
-        Container(width: 60, height: 10, decoration: BoxDecoration(color: p['type']==2 ? Colors.brown : Colors.green, borderRadius: BorderRadius.circular(5), border: p['type']==2 ? Border.all(color: Colors.black, width: 2) : null))
-      ]))),
-      Align(alignment: FractionalOffset(pX, 1-pY), child: const Icon(Icons.currency_bitcoin, color: Colors.orange, size: 40)),
-      Row(children: [Expanded(child: GestureDetector(onTapDown:(_)=>move(-0.1), onPanUpdate:(d)=>move(d.delta.dx/200), child: Container(color:Colors.transparent))), Expanded(child: GestureDetector(onTapDown:(_)=>move(0.1), onPanUpdate:(d)=>move(d.delta.dx/200), child: Container(color:Colors.transparent)))]),
-      Positioned(top: 50, width: MediaQuery.of(context).size.width, child: Center(child: Text("DYSTANS: ${score ~/ 100} m", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)))),
-      if(go) Container(color: Colors.black87, child: buildGameOverScreen(scoreInfo: "Wynik: ${score ~/ 100} m", onRestart: start, onExit: widget.onBack)),
-      Positioned(top: 40, right: 20, child: IconButton(icon: const Icon(Icons.close), onPressed: (){t?.cancel(); widget.onBack();}))
-    ]));
+
+  Widget _modernObstacle() {
+    return Container(
+      width: 36, height: 36,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black.withOpacity(0.45), border: Border.all(color: Colors.redAccent, width: 2), boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.3), blurRadius: 10)]),
+      child: const Icon(Icons.trending_down, color: Colors.redAccent, size: 24),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isSelectingSkin) return _buildShop();
+    if (!playing) return const SizedBox();
+    int bgIndex = (score ~/ 1000) % bgGradients.length;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          AnimatedContainer(duration: const Duration(seconds: 1), decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: bgGradients[bgIndex]))),
+          ...plats.map((p) => Align(alignment: FractionalOffset((p['x'] as num).toDouble(), 1 - (p['y'] as num).toDouble()), child: Column(mainAxisSize: MainAxisSize.min, children: [
+            if(p['type'] == 1) const Padding(
+              padding: EdgeInsets.only(bottom: 2),
+              // BIAŁA STRZELACZKA (IKONA RAKIETY)
+              child: Icon(Icons.rocket_launch, color: Colors.white, size: 24),
+            ),
+            Container(width: 65, height: 10, decoration: BoxDecoration(color: p['color'], borderRadius: BorderRadius.circular(10), border: p['dx'] != 0.0 ? Border.all(color: Colors.white, width: 1.5) : null)),
+          ]))),
+          ...coins.map((c) => Align(alignment: FractionalOffset((c['x'] as num).toDouble(), 1 - (c['y'] as num).toDouble()), child: _modernCoin(size: 22))),
+          ...items.map((it) => Align(alignment: FractionalOffset((it['x'] as num).toDouble(), 1 - (it['y'] as num).toDouble()), child: const Text("X2", style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w900, fontSize: 20, shadows: [Shadow(color: Colors.amber, blurRadius: 5)])))),
+          ...obstacles.map((o) => Align(alignment: FractionalOffset((o['x'] as num).toDouble(), 1 - (o['y'] as num).toDouble()), child: _modernObstacle())),
+          Align(alignment: FractionalOffset(pX, 1 - pY), child: _buildPlayerIcon()),
+          GestureDetector(onPanUpdate: (d) => move(d.delta.dx / 300), child: Container(color: Colors.transparent)),
+          SafeArea(child: Padding(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text("${score ~/ 100} M", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 5),
+            Row(children: [ _modernCoin(size: 24), const SizedBox(width: 8), Text("$sessionCoins", style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.w900)) ]),
+          ]))),
+          if (isGameOver) Container(color: Colors.black.withOpacity(0.95), child: buildGameOverScreen(scoreInfo: "DYSTANS: ${score ~/ 100}M\nZEBRANE: $sessionCoins", onRestart: start, onExit: widget.onBack)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayerIcon() {
+    if (GlobalFinance.allCoins.isNotEmpty && selectedSkinIndex < GlobalFinance.allCoins.length) return Image.network(GlobalFinance.allCoins[selectedSkinIndex]['image'], width: 50, height: 50);
+    return const Icon(Icons.currency_bitcoin, color: Colors.orange, size: 50);
+  }
+
+  Widget _buildShop() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F0F1F),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, elevation: 0, centerTitle: true,
+        title: const Text("SKLEP KRYPTO", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 1.5)), 
+        actions: [ Row(children: [ _modernCoin(size: 20), const SizedBox(width: 8), Text("${GlobalFinance.totalCoins}  ", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)) ]) ],
+      ),
+      body: Column(
+        children: [
+          const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text("WYBIERZ SWÓJ SKIN", style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14))),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: 0.8),
+              itemCount: GlobalFinance.allCoins.length.clamp(1, 200),
+              itemBuilder: (ctx, i) {
+                var skin = GlobalFinance.allCoins[i];
+                int basePrice = (i ~/ 10) * 50; 
+                int price = (i > 1 && basePrice == 0) ? 15 : basePrice;
+                bool isOwned = GlobalFinance.ownedSkinIndices.contains(i) || i < 2;
+                bool isSelected = selectedSkinIndex == i;
+                return GestureDetector(
+                  onTap: () {
+                    if (isOwned) { setState(() => selectedSkinIndex = i); }
+                    else if (GlobalFinance.totalCoins >= price) {
+                      setState(() { GlobalFinance.totalCoins -= price; GlobalFinance.ownedSkinIndices.add(i); selectedSkinIndex = i; });
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(color: isSelected ? Colors.amber.withOpacity(0.15) : Colors.white10, borderRadius: BorderRadius.circular(20), border: Border.all(color: isSelected ? Colors.amber : (isOwned ? Colors.green.withOpacity(0.5) : Colors.white12), width: 2)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.network(skin['image'], width: 42, height: 42),
+                        const SizedBox(height: 12),
+                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          if (!isOwned) _modernCoin(size: 14),
+                          if (!isOwned) const SizedBox(width: 6),
+                          Text(isOwned ? "POSIADASZ" : "$price", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: isOwned ? Colors.greenAccent : Colors.white)),
+                        ]),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(30, 5, 30, 25),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)), elevation: 10),
+                  onPressed: start, child: const Text("START GRY", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20))
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
-
 // 6. CATCH COIN
 class _CatchGame extends StatefulWidget {
   final VoidCallback onBack; const _CatchGame({required this.onBack}); @override State<_CatchGame> createState() => _CatchGameState();
