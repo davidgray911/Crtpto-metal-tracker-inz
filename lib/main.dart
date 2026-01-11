@@ -253,10 +253,9 @@ Widget buildGameOverScreen({required String scoreInfo, required VoidCallback onR
   );
 }
 
-// =============================================================================
+
 // EKRAN GŁÓWNY (CryptoMarketScreen) + DETALE (CryptoDetails)
-// Wklej to w miejsce starego kodu.
-// =============================================================================
+
 
 class CryptoMarketScreen extends StatefulWidget {
   const CryptoMarketScreen({super.key});
@@ -286,23 +285,56 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
 
   @override void initState() { super.initState(); _fetch(); }
 
-  Future<void> _fetch() async {
-    try {
-      final res = await http.get(Uri.parse('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1'));
-      if (res.statusCode == 200 && mounted) {
-        setState(() { 
-          _allCoins = json.decode(res.body); 
-          GlobalFinance.allCoins = _allCoins;
-          _filteredCoins = _allCoins;
-          _loading = false; 
-        });
-      }
-    } catch (e) { if (mounted) _generateFallbackData(); }
-  }
+  bool _hasError = false; 
 
+Future<void> _fetch() async {
+  setState(() {
+    _loading = true;
+    _hasError = false;
+  });
+  try {
+    final res = await http.get(Uri.parse('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1'))
+        .timeout(const Duration(seconds: 10)); 
+
+    if (res.statusCode == 200 && mounted) {
+      setState(() {
+        _allCoins = json.decode(res.body);
+        GlobalFinance.allCoins = _allCoins;
+        _filteredCoins = _allCoins;
+        _loading = false;
+      });
+    } else {
+      throw Exception("BŁĄD SERWERA");
+    }
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        _hasError = true;
+      });
+      
+      // ALERT (FLOATING SNACKBAR)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            "BŁĄD POŁĄCZENIA. SPRAWDŹ DOSTĘP DO INTERNETU LUB BŁĄD SERWERA.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
+          ),
+          backgroundColor: Colors.redAccent.withOpacity(0.9),
+          behavior: SnackBarBehavior.floating, 
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 30), 
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+}
   void _generateFallbackData() async {
     await Future.delayed(const Duration(milliseconds: 300));
-    // Prosty mechanizm, żeby nie blokować UI w razie błędu sieci
+    
     if (mounted) setState(() { _loading = false; }); 
   }
 
@@ -318,7 +350,7 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Używamy GlobalFinance (które masz zdefiniowane wyżej w pliku)
+  
     return ValueListenableBuilder(
       valueListenable: GlobalFinance.selectedCurrency,
       builder: (context, currency, _) {
@@ -352,7 +384,7 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
                     child: Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF111111), // Bardzo ciemne tło
+                        color: const Color(0xFF111111), 
                         borderRadius: BorderRadius.circular(20), // Zaokrąglenie
                       ),
                       child: TextField(
@@ -473,7 +505,7 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0B0B0B), // Prawie czarne tło karty
+          color: const Color(0xFF0B0B0B), 
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
@@ -517,9 +549,9 @@ class _CryptoMarketScreenState extends State<CryptoMarketScreen> {
   }
 }
 
-// =============================================================================
-// EKRAN SZCZEGÓŁÓW (CryptoDetails) - BEZ ZMIAN, ŻEBYŚ NIE MIAŁ BŁĘDÓW
-// =============================================================================
+
+// EKRAN SZCZEGÓŁÓW (CryptoDetails) 
+
 class CryptoDetails extends StatefulWidget {
   final dynamic coin;
   const CryptoDetails({required this.coin, super.key});
@@ -530,19 +562,29 @@ class _CryptoDetailsState extends State<CryptoDetails> {
   int _range = 7;
   List<FlSpot> _spots = [];
 
-  @override void initState() { super.initState(); _loadChart(); }
+  @override
+  void initState() {
+    super.initState();
+    _loadChart();
+  }
 
   Future<void> _loadChart() async {
     try {
-      final res = await http.get(Uri.parse('https://api.coingecko.com/api/v3/coins/${widget.coin['id']}/market_chart?vs_currency=usd&days=$_range'));
+      final res = await http.get(Uri.parse(
+          'https://api.coingecko.com/api/v3/coins/${widget.coin['id']}/market_chart?vs_currency=usd&days=$_range'));
       if (res.statusCode == 200 && mounted) {
         final List prices = json.decode(res.body)['prices'];
         setState(() {
-          _spots = prices.asMap().entries.map((e) => FlSpot(e.key.toDouble(), GlobalFinance.convert(e.value[1].toDouble()))).toList();
+          _spots = prices.asMap().entries.map((e) {
+            return FlSpot(
+              e.value[0].toDouble(), // Używamy timestamp jako X dla precyzyjnych dat
+              GlobalFinance.convert(e.value[1].toDouble()),
+            );
+          }).toList();
         });
       }
     } catch (e) {
-       if (mounted) setState(() => _spots = []);
+      if (mounted) setState(() => _spots = []);
     }
   }
 
@@ -550,26 +592,144 @@ class _CryptoDetailsState extends State<CryptoDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF050505),
-      appBar: AppBar(backgroundColor: Colors.transparent, iconTheme: const IconThemeData(color: Colors.white), title: Text(widget.coin['name'], style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white))),
+      appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(widget.coin['name'].toString().toUpperCase(),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 1.2))),
       body: Column(
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [1, 7, 30].map((d) => Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: ChoiceChip(label: Text(d == 1 ? "24H" : "${d}D"), labelStyle: TextStyle(color: _range == d ? Colors.black : Colors.white), selectedColor: Colors.amber, backgroundColor: Colors.white10, selected: _range == d, onSelected: (v) { setState(() => _range = d); _loadChart(); }))).toList()),
+          // WYBÓR ZAKRESU CZASOWEGO
+          Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [1, 7, 30].map((d) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: ChoiceChip(
+                      label: Text(d == 1 ? "24H" : "${d}D"),
+                      labelStyle: TextStyle(
+                          color: _range == d ? Colors.black : Colors.white,
+                          fontWeight: FontWeight.bold),
+                      selectedColor: Colors.amber,
+                      backgroundColor: Colors.white10,
+                      selected: _range == d,
+                      onSelected: (v) {
+                        setState(() => _range = d);
+                        _loadChart();
+                      }),
+                );
+              }).toList()),
           const SizedBox(height: 30),
+
+          // PROFESJONALNY WYKRES
           Container(
             height: 250,
             width: double.infinity,
-            padding: const EdgeInsets.only(right: 20),
-            child: _spots.isEmpty ? const Center(child: CircularProgressIndicator(color: Colors.amber)) : LineChart(LineChartData(gridData: const FlGridData(show: false), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), lineBarsData: [LineChartBarData(spots: _spots, isCurved: true, barWidth: 4, color: Colors.amber, isStrokeCapRound: true, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.amber.withOpacity(0.2), Colors.transparent])))]))),
+            // Usunięcie lewego paddingu, aby dociągnąć wykres do krawędzi
+            padding: const EdgeInsets.only(right: 20, left: 0),
+            child: _spots.isEmpty
+                ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+                : LineChart(
+                    LineChartData(
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: true,
+                        getDrawingHorizontalLine: (value) =>
+                            const FlLine(color: Colors.white10, strokeWidth: 0.5),
+                        getDrawingVerticalLine: (value) =>
+                            const FlLine(color: Colors.white10, strokeWidth: 0.5),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 30,
+                            interval: _range == 1 ? 14400000 : 86400000, // Co 4h dla 24h, co 1 dzień dla reszty
+                            getTitlesWidget: (value, meta) {
+                              final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                              String text = '';
+                              if (_range == 1) {
+                                text = "${date.hour}:00";
+                              } else {
+                                text = "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}";
+                              }
+                              return SideTitleWidget(
+                                axisSide: meta.axisSide,
+                                child: Text(text, style: const TextStyle(color: Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
+                              );
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50, // Zmniejszony rozmiar, by dociągnąć wykres do lewej
+                            getTitlesWidget: (value, meta) {
+                              return SideTitleWidget(
+                                axisSide: meta.axisSide,
+                                child: Text(
+                                  value.toStringAsFixed(value < 1 ? 3 : 1),
+                                  style: const TextStyle(color: Colors.white38, fontSize: 9, fontWeight: FontWeight.bold),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      // Usunięcie domyślnych marginesów FlChart
+                      lineTouchData: LineTouchData(enabled: true),
+                      borderData: FlBorderData(show: true, border: Border.all(color: Colors.white10)),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: _spots,
+                          isCurved: true,
+                          barWidth: 2,
+                          color: Colors.amber,
+                          isStrokeCapRound: true,
+                          dotData: const FlDotData(show: false),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.amber.withOpacity(0.2), Colors.transparent],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+
+          // SEKCJA STATYSTYK
           Padding(
             padding: const EdgeInsets.all(24),
             child: Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: const Color(0xFF121212), borderRadius: BorderRadius.circular(28)),
-              child: Column(children: [
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("KAPITALIZACJA", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold)), Text("${GlobalFinance.sign}${widget.coin['market_cap'] ?? '984,231,000'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))]),
-                const Divider(height: 30, color: Colors.white10),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("WOLUMEN (24H)", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold)), Text("${GlobalFinance.sign}${widget.coin['total_volume'] ?? '42,120,500'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))]),
-              ]),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121212),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Column(
+                children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text("KAPITALIZACJA", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text("${GlobalFinance.sign}${widget.coin['market_cap'] ?? 'N/A'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))
+                  ]),
+                  const Divider(height: 30, color: Colors.white10),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text("WOLUMEN (24H)", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text("${GlobalFinance.sign}${widget.coin['total_volume'] ?? 'N/A'}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))
+                  ]),
+                ],
+              ),
             ),
           ),
         ],
@@ -577,9 +737,9 @@ class _CryptoDetailsState extends State<CryptoDetails> {
     );
   }
 }
-// =============================================================================
+
 // 2. METALE SZLACHETNE (PORTFOLIO HEADER STYLE - STRZAŁECZKA I WALUTA PIONOWO)
-// =============================================================================
+
 
 class MetalsMarketScreen extends StatefulWidget {
   const MetalsMarketScreen({super.key});
@@ -635,7 +795,7 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
                         DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: currentCurrency,
-                            icon: const SizedBox.shrink(), // Ukrywamy domyślną strzałkę z boku
+                            icon: const SizedBox.shrink(), 
                             alignment: Alignment.center,
                             dropdownColor: const Color(0xFF1E1E2C),
                             // Widok przed rozwinięciem (Pionowo)
@@ -827,9 +987,9 @@ class _MetalsMarketScreenState extends State<MetalsMarketScreen> {
     );
   }
 }
-// =============================================================================
+
 // 3. KANTOR (RED BUTTON, WHITE ARROWS, CENTERED TITLE)
-// =============================================================================
+
 
 class CurrencyExchangeScreen extends StatefulWidget {
   const CurrencyExchangeScreen({super.key});
@@ -840,7 +1000,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
   final _input = TextEditingController(text: "2"); 
   String _from = "USD", _to = "PLN";
 
-  // Helper do flag
+  
   String _getFlag(String code) {
     switch (code) {
       case 'USD': return '🇺🇸';
@@ -919,7 +1079,7 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
                       ),
                     ),
 
-                    // DÓŁ - NA WALUTĘ (Zmieniono na OTRZYMUJESZ)
+                    
                     _currencyRow("OTRZYMUJESZ", _to, TextEditingController(text: result.toStringAsFixed(2)), (v) => setState(() => _to = v!), true),
                   ],
                 ),
@@ -1026,9 +1186,9 @@ class _CurrencyExchangeScreenState extends State<CurrencyExchangeScreen> {
     );
   }
 }
-// =============================================================================
+
 // 4. PORTFEL (REAL CRYPTO ICONS - IKONY KRYPTO JAK W EKRANIE 1)
-// =============================================================================
+
 
 class AssetBankScreen extends StatefulWidget {
   const AssetBankScreen({super.key});
@@ -1036,7 +1196,7 @@ class AssetBankScreen extends StatefulWidget {
 }
 
 class _AssetBankScreenState extends State<AssetBankScreen> {
-  // 1. TWOJE PORTFOLIO (STARTOWE)
+  // 1.  PORTFOLIO (STARTOWE)
   final List<Map<String, dynamic>> _portfolio = [
     {'type': 'CRYPTO', 'name': 'BITCOIN', 'symbol': 'BTC', 'amount': 0.45, 'price': 96500.0, 'image': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', 'color': const Color(0xFFF7931A), 'change': 2.45},
     {'type': 'CRYPTO', 'name': 'ETHEREUM', 'symbol': 'ETH', 'amount': 12.5, 'price': 2750.0, 'image': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', 'color': const Color(0xFF627EEA), 'change': -1.12},
@@ -1049,7 +1209,7 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
   void _openAddModal() {
     List<Map<String, dynamic>> fullDatabase = [];
 
-    // DODAJEMY 6 METALI
+    //  6 METALI
     fullDatabase.addAll([
       {'type': 'METAL', 'name': 'ZŁOTO', 'symbol': 'XAU', 'price': 2655.80, 'icon': Icons.diamond, 'color': Colors.amber},
       {'type': 'METAL', 'name': 'SREBRO', 'symbol': 'XAG', 'price': 31.45, 'icon': Icons.lens_blur, 'color': Colors.blueGrey},
@@ -1059,7 +1219,7 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
       {'type': 'METAL', 'name': 'ROD', 'symbol': 'XRH', 'price': 4750.0, 'icon': Icons.auto_awesome, 'color': Colors.blue},
     ]);
 
-    // DODAJEMY WALUTY Z KANTORA
+    //  WALUTY Z KANTORA
     GlobalFinance.rates.forEach((code, rate) {
       fullDatabase.add({
         'type': 'FIAT',
@@ -1071,7 +1231,7 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
       });
     });
 
-    // DODAJEMY 250 KRYPTO (Z ZABEZPIECZENIEM PRZED PUSTĄ LISTĄ)
+    //  250 KRYPTO 
     if (GlobalFinance.allCoins != null) {
       for (var coin in GlobalFinance.allCoins) {
         fullDatabase.add({
@@ -1169,7 +1329,7 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
     );
   }
 
-  // 4. POMOCNIK NAZW WALUT
+  // 4.  NAZWY WALUT
   String _getCurrencyFullName(String code) {
     switch (code) {
       case 'USD': return 'DOLAR AMERYKAŃSKI';
@@ -1181,7 +1341,7 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
     }
   }
 
-  // TUTAJ ZACZYNA SIĘ TWÓJ @override Widget build... (TEGO NIE NADPISUJ)
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -1228,10 +1388,10 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
                         DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: currency,
-                            icon: const SizedBox.shrink(), // Ukrywamy domyślną strzałkę z boku
+                            icon: const SizedBox.shrink(), 
                             alignment: Alignment.center,
                             dropdownColor: const Color(0xFF1E1E2C),
-                            // To buduje widok, który widzisz przed kliknięciem (Pionowo)
+                          
                             selectedItemBuilder: (BuildContext context) {
                               return GlobalFinance.rates.keys.map<Widget>((String value) {
                                 return Column(
@@ -1243,7 +1403,7 @@ class _AssetBankScreenState extends State<AssetBankScreen> {
                                 );
                               }).toList();
                             },
-                            // To buduje listę rozwijaną (Standardowo)
+                            // lista rozwijaną 
                             items: GlobalFinance.rates.keys.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
@@ -1432,9 +1592,9 @@ class _AssetSelectionModalState extends State<_AssetSelectionModal> {
     );
   }
 }
-// =============================================================================
+
 // 5. RELAKS (GRY - BEZ ZMIAN LOGIKI)
-// =============================================================================
+
 
 class RelaxationHub extends StatefulWidget {
   const RelaxationHub({super.key});
@@ -1593,7 +1753,7 @@ class _ClickerState extends State<_ClickerGame> {
   }
 }
 
-// 3. REFLEKS - WERSJA PRO KRYPTO (BEZ NAPISÓW PODPOWIADAJĄCYCH)
+// 3. REFLEKS - WERSJA PRO KRYPTO 
 class _ReflexGame extends StatefulWidget {
   final VoidCallback onBack;
   const _ReflexGame({required this.onBack});
@@ -1682,7 +1842,7 @@ class _ReflexState extends State<_ReflexGame> {
         setState(() {
           if (Random().nextDouble() < 0.25) {
             bg = const Color(0xFF00C853);
-            m = ""; // USUNIĘTO NAPIS "KLIKAJ"
+            m = ""; 
             currentCoinImageUrl = null;
           } else {
             bg = colors[Random().nextInt(colors.length)];
@@ -1797,9 +1957,9 @@ class _ReflexState extends State<_ReflexGame> {
     );
   }
 }
-// =============================================================================
+
 // 4. MEMORY - NAPRAWIONA WERSJA (BRAK BŁĘDÓW TYPÓW I CZCIONEK)
-// =============================================================================
+
 
 class _MemoryGame extends StatefulWidget {
   final VoidCallback onBack;
@@ -1881,7 +2041,7 @@ class _MemoryGameState extends State<_MemoryGame> {
     tempCards.shuffle();
 
     setState(() {
-      cards = tempCards; // TERAZ TYPY SIĘ ZGADZAJĄ
+      cards = tempCards; 
       flipped = List.filled(cards.length, false);
       solved = List.filled(cards.length, false);
       selectedIndices = [];
@@ -1994,9 +2154,9 @@ class _MemoryGameState extends State<_MemoryGame> {
   }
 }
 
-// =============================================================================
+
 // 5. CRYPTO JUMP ULTIMATE - NO ASSETS, STABLE TYPES & ROCKET BOOST
-// =============================================================================
+
 
 class _CryptoJumpGame extends StatefulWidget {
   final VoidCallback onBack;
@@ -2203,7 +2363,7 @@ class _CryptoJumpGameState extends State<_CryptoJumpGame> {
             const SizedBox(height: 5),
             Row(children: [ _modernCoin(size: 24), const SizedBox(width: 8), Text("$sessionCoins", style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.w900)) ]),
           ]))),
-          if (isGameOver) Container(color: Colors.black.withOpacity(0.95), child: buildGameOverScreen(scoreInfo: "DYSTANS: ${score ~/ 100}M\nZEBRANE: $sessionCoins", onRestart: start, onExit: widget.onBack)),
+          if (isGameOver) Container(color: Colors.black.withOpacity(0.95), child: buildGameOverScreen(scoreInfo: "DYSTANS: ${score ~/ 100}M\nZEBRANE MONETY: $sessionCoins", onRestart: start, onExit: widget.onBack)),
         ],
       ),
     );
@@ -2286,8 +2446,16 @@ class _CatchGame extends StatefulWidget {
 }
 class _CatchGameState extends State<_CatchGame> {
   double x=0; List<Map<String, dynamic>> items=[]; int score=0, lives=3, lvl=1; Timer? t; bool p=false, go=false; double sp=0.015; Color pc=Colors.grey;
-  @override void initState() { super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(context, "Łap Okazję", "📉 Spadek = -1 życie 💔\nOpuszczenie monety = -1 życie.", start)); }
-  void start() { setState((){ p=true; go=false; score=0; lives=3; lvl=1; sp=0.015; items.clear(); pc=Colors.grey; }); t=Timer.periodic(const Duration(milliseconds: 20), (tk){
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) => showGameInfo(
+    context,
+    "CATCH COIN",
+    "💔💔💔 = PRZEGRANA\nZEBRANIE IKONKI 📉 = 💔\nPOMINIĘCIE MONETY = 💔\n10 MONET = POZIOM WYŻEJ",
+    start,
+  ));
+}  void start() { setState((){ p=true; go=false; score=0; lives=3; lvl=1; sp=0.015; items.clear(); pc=Colors.grey; }); t=Timer.periodic(const Duration(milliseconds: 20), (tk){
     if(!mounted){tk.cancel();return;}
     setState((){
       if(Random().nextDouble() < (0.02+(lvl*0.005))) { items.add({'x':Random().nextDouble()*2-1, 'y':-1.2, 'bad':Random().nextDouble()<0.25, 'c':Colors.primaries[Random().nextInt(Colors.primaries.length)]}); }
