@@ -8,6 +8,3 @@ Aplikacja do śledzenia rynków finansowych z modułem relaksacyjnym.
 - Kalkulator walutowy z obsługą 20 walut.
 - Gra "Click Game" do redukcji stresu.
 
-## W trakcie
-- nowocześniejszy interfejs
-- ekrany logowania użytkownika 
